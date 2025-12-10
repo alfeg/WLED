@@ -42,8 +42,8 @@ class AutoPlaylistUsermod : public Usermod {
 
     bool functionality_enabled = false;
     bool silenceDetected = true;
-    byte ambientPlaylist = 1;
-    byte musicPlaylist = 2;
+    byte ambientPlaylist = 1;  // Preset ID containing ambient playlist
+    byte musicPlaylist = 2;    // Preset ID containing music playlist
     int timeout = 60;
     bool autoChange = false;
     byte lastAutoPlaylist = 0;
@@ -320,6 +320,7 @@ class AutoPlaylistUsermod : public Usermod {
           USER_PRINTF("AutoPlaylist: enabled due selecting musicPlaylist(%u)\n", musicPlaylist);
           #endif
           functionality_enabled = true;
+          lastAutoPlaylist = currentPlaylist;  // Initialize lastAutoPlaylist when enabling
       }
 
       if (bri == 0) return;
@@ -445,8 +446,8 @@ class AutoPlaylistUsermod : public Usermod {
 
       top[FPSTR(_autoPlaylistEnabled)] = enabled;
       top[FPSTR(_timeout)]             = timeout;
-      top[FPSTR(_ambientPlaylist)]     = ambientPlaylist;  // usermodparam
-      top[FPSTR(_musicPlaylist)]       = musicPlaylist;    // usermodparam
+      top[FPSTR(_ambientPlaylist)]     = ambientPlaylist;  // Preset ID for ambient playlist
+      top[FPSTR(_musicPlaylist)]       = musicPlaylist;    // Preset ID for music playlist
       top[FPSTR(_autoChange)]          = autoChange;
       top[FPSTR(_change_lockout)]      = change_lockout;
       top[FPSTR(_ideal_change_min)]    = ideal_change_min;
@@ -509,17 +510,23 @@ class AutoPlaylistUsermod : public Usermod {
 
   private:
 
-    void changePlaylist(byte id) {
+    void changePlaylist(byte presetId) {
+        if (presetId == 0 || presetId > 250) {
+          #ifdef USERMOD_AUTO_PLAYLIST_DEBUG
+          USER_PRINTF("AutoPlaylist: Invalid preset ID %d\n", presetId);
+          #endif
+          return;
+        }
+        
         String name = "";
-        getPresetName(id, name);
+        getPresetName(presetId, name);
         #ifdef USERMOD_AUTO_PLAYLIST_DEBUG
-        USER_PRINTF("AutoPlaylist: Applying \"%s\"\n", name.c_str());
+        USER_PRINTF("AutoPlaylist: Loading preset %d (\"%s\")\n", presetId, name.c_str());
         #endif
-        // if (currentPlaylist != id) {  // un-comment to only change on "real" changes
-          unloadPlaylist(); // applying a preset requires to unload previous playlist
-          applyPreset(id, CALL_MODE_NOTIFICATION);
-        // }
-        lastAutoPlaylist = id;
+        
+        unloadPlaylist(); // unload current playlist before applying preset
+        applyPreset(presetId, CALL_MODE_NOTIFICATION);
+        lastAutoPlaylist = presetId;
     }
 
 };
