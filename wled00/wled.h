@@ -1026,6 +1026,11 @@ WLED_GLOBAL volatile uint8_t jsonBufferLock _INIT(0);
   #define DEBUGFS_PRINTF(x...)
 #endif
 
+// Usermod compatibility macros (for WLED-MM usermods)
+#define USER_PRINT(x)      DEBUG_PRINT(x)
+#define USER_PRINTLN(x)    DEBUG_PRINTLN(x)
+#define USER_PRINTF(x...)  DEBUG_PRINTF(x)
+
 // debug macro variable definitions
 #ifdef WLED_DEBUG
   WLED_GLOBAL unsigned long debugTime _INIT(0);
